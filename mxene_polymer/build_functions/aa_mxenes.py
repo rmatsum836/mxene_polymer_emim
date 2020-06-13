@@ -9,7 +9,8 @@ from parmed.gromacs.gromacstop import GromacsTopologyFile
 from mtools.gromacs.gromacs import parse_nonbond_params
 from mbuild.formats.lammpsdata import write_lammpsdata
 
-def build_alkylammonium_mxene(chain_length=12, dspacing=1.1, n_compounds, composition, periods):
+def build_alkylammonium_mxene(n_compounds, composition, periods, chain_length=12,
+        dspacing=1.1):
     ti3c2 = build_structure(periods=periods,
             composition=composition,
             dspacing=dspacing,

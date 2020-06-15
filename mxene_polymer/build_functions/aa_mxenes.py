@@ -1,4 +1,4 @@
-from mxenes.structures import build_structure
+from mxenes.structures import build_structure, change_charge
 from mxenes.utils.utils import get_fn
 
 import numpy as np
@@ -36,9 +36,11 @@ def build_alkylammonium_mxene(n_compounds, composition, periods, chain_length=12
         box=region1,
         fix_orientation=True)
         
-    aaPM = lopes.apply(aa_1, residues=['alkylam'], assert_bond_params=False,
-            assert_angle_params=False, assert_dihedral_params=False)
+    aaPM = lopes.apply(aa_1, residues=['alkylam'],
+            assert_dihedral_params=False)
     system = aaPM + ti3c2
+    change_charge(system, new_charge=0)
    
     system.save('ti3c2.gro', combine='all', overwrite=True)
+    system.save('ti3c2.top', combine='all', overwrite=True)
     write_lammpsdata(system, 'data.mxene')

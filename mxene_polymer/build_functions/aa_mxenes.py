@@ -29,17 +29,33 @@ def build_alkylammonium_mxene(n_compounds, composition, periods, chain_length=12
                      maxs=[ti3c2.box[0] / 10,
                            ti3c2.box[1] / 10,
                            (ti3c2.box[2] / 10 - 2 * displacement) / 2 + displacement])
+    region2 = mb.Box(mins=[0,
+                           0,
+                           (ti3c2.box[2] / 10 - 2 * displacement) + displacement + 0.15],
+                     maxs=[ti3c2.box[0] / 10,
+                           ti3c2.box[1] / 10,
+                           (ti3c2.box[2] / 10 - 2 * displacement) + 2 + displacement])
     
     aa_1 = mb.fill_box(
         compound=aa,
         n_compounds=n_compounds,
         box=region1,
         fix_orientation=True)
+
+    aa_2 = mb.fill_box(
+        compound=aa,
+        n_compounds=n_compounds,
+        box=region2,
+        fix_orientation=True)
         
-    aaPM = lopes.apply(aa_1, residues=['alkylam'],
+    aa1PM = lopes.apply(aa_1, residues=['alkylam'],
             assert_dihedral_params=False)
-    system = aaPM + ti3c2
+    aa2PM = lopes.apply(aa_2, residues=['alkylam'],
+            assert_dihedral_params=False)
+
+    system = aa1PM + aa2PM + ti3c2
     change_charge(system, new_charge=0)
+    system.box = ti3c2.box
    
     system.save('ti3c2.gro', combine='all', overwrite=True)
     system.save('ti3c2.top', combine='all', overwrite=True)

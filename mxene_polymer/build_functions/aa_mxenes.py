@@ -19,6 +19,23 @@ def build_alkylammonium_mxene(n_compounds, composition, periods, chain_length=12
    
     n_carbons = 'C' * chain_length
     aa = mb.load(f'{n_carbons}[N](C)(C)C', smiles=True)
+
+    # Rename some carbons
+    # CE = end carbon
+    # CM = middle carbon
+    # CB = branch carbon
+    for idx, particle in enumerate(aa.particles()):
+        if idx == 0:
+            particle.name = 'C_E'
+        if idx == chain_length / 2:
+            particle.name = 'C_M'
+        # TODO: Find way to get branch carbon index without
+        # hardcoding
+        if idx == 13:
+            particle.name = 'C_B1'
+        if idx == 14:
+            particle.name = 'C_B2'
+
     aa.name = 'alkylam'
     
     lopes = get_ff('lopes')
@@ -56,6 +73,15 @@ def build_alkylammonium_mxene(n_compounds, composition, periods, chain_length=12
     system = aa1PM + aa2PM + ti3c2
     change_charge(system, new_charge=0)
     system.box = ti3c2.box
+    for atom in system.atoms:
+        if atom.name == 'C_E':
+            atom.name = 'CE'
+        elif atom.name == 'C_M':
+            atom.name = 'CM'
+        elif atom.name == 'C_B1':
+            atom.name = 'CB1'
+        elif atom.name == 'C_B2':
+            atom.name = 'CB2'
    
     system.save('ti3c2.gro', combine='all', overwrite=True)
     system.save('ti3c2.top', combine='all', overwrite=True)

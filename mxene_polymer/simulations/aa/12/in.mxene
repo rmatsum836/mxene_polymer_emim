@@ -1,0 +1,57 @@
+dimension           3
+units               real
+boundary            p p p
+
+atom_style          full
+pair_style          lj/cut/coul/long 7.0
+bond_style          harmonic
+angle_style         harmonic
+dihedral_style      opls
+kspace_style        pppm 1.0e-4
+box                 tilt large
+
+read_data           data.mxene
+
+group               il type 1 2 3 4 5 6 7
+group               mxene type 8 9 10 11 12
+special_bonds       lj/coul 0.0 0.0 0.0 angle yes dihedral yes
+
+velocity            all create 298.15 4928549
+
+neighbor            3.0 bin
+neigh_modify        delay 1 every 1 check yes
+fix                 2 all momentum 1 linear 1 1 1
+timestep            0.5
+thermo              100
+
+#fix                 1 all shake 0.0001 1000 100 b 1 2 3 5 8 a 12
+
+fix                 NVE il nve/limit 0.1
+dump                NVEDump all atom 100 nve.lammpstrj
+run                 50000
+undump              NVEDump
+unfix               NVE
+
+fix                 1 all shake 0.0001 1000 100 b 11 a 19
+#fix                 1 all shake 0.0001 1000 100 b 1 2 3 5 8 a 12
+fix                 NVT il nvt temp 298.15 298.15 10.0
+dump                NVTDump all atom 100 nvt.lammpstrj
+#dump                NVTDump all dcd 100 nvt.dcd
+run                 100000
+unfix               NVT
+undump              NVTDump
+
+fix                 NPTCompress all npt temp 298.15 298.15 100.0 aniso 100.0 100.0 100.0
+
+run                 100000
+unfix               NPTCompress 
+
+fix                 MyNPT all npt temp 298.15 298.15 100.0 aniso 1.0 1.0 100.0
+
+dump                XTCDump  all dcd 1000 mxene_wrapped.dcd
+dump                UnwrappedDump all dcd 1000 mxene_unwrapped.dcd
+dump_modify         UnwrappedDump unwrap yes
+
+run                 20000000
+
+write_data          data.after_npt

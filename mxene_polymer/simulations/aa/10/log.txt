@@ -1,0 +1,102 @@
+
+################################################################################
+
+ PACKMOL - Packing optimization for the automated generation of
+ starting configurations for molecular dynamics simulations.
+ 
+                           Included as part of Packmol Memgen
+                                                              Version 18.002 
+
+################################################################################
+
+  Packmol must be run with: packmol < inputfile.inp 
+
+  Userguide at: www.ime.unicamp.br/~martinez/packmol 
+
+  Reading input file... (Control-C aborts)
+  Seed for random number generator:        12345
+  Output file: /var/folders/kt/qnjm2gfs5px31y9zkkk5myrr0000gn/T/tmp22gmg28k.xyz
+  Reading coordinate file: /var/folders/kt/qnjm2gfs5px31y9zkkk5myrr0000gn/T/tmpqt5at3co.xyz
+  Number of independent structures:            1
+  The structures are: 
+  Structure            1 :/var/folders/kt/qnjm2gfs5px31y9zkkk5myrr0000gn/T/tmpqt5at3co.xyz - created by mBuild(          44  atoms)
+  Total number of restrictions:            1
+  Distance tolerance:    2.0000000000000000     
+  Number of molecules of type            1 :           90
+  Total number of atoms:         3960
+  Total number of molecules:           90
+  Number of fixed molecules:            0
+  Number of free molecules:           90
+  Number of variables:          540
+  Total number of fixed atoms:            0
+  Rotations about x axis of molecules of  type            1  will be constrained. 
+  Rotations about y axis of molecules of  type            1  will be constrained. 
+  Rotations about z axis of molecules of  type            1  will be constrained. 
+  Maximum internal distance of type            1 :    15.486740410760071     
+  All atoms must be within these coordinates: 
+   x: [   -993.24484493931811      ,    1006.7551550606819       ] 
+   y: [   -996.65681436363548      ,    1003.3431856363645       ] 
+   z: [   -984.56007375827039      ,    1015.4399262417296       ] 
+  If the system is larger than this, increase the sidemax parameter. 
+
+################################################################################
+
+  Building initial approximation ... 
+
+################################################################################
+
+  Adjusting initial point to fit the constraints 
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+
+  Molecules of type:            1
+
+  Packing:|0                                                             100%|
+          |*************************************************
+  Fixing bad orientations ...      1 of      3
+  Moving worst molecules ... 
+  Function value before moving molecules:   50.510589030779990     
+  Type         1 molecules with non-zero contributions:  100.00%
+  Moving         4 molecules of type         1
+  New positions will be based on good molecules (movebadrandom is not set) 
+   Moving:|0                                                             100%|
+          |******************************************************************|
+  Function value after moving molecules:   50.510589030779990     
+  Packing:|0                                                             100%|
+          |
+  Fixing bad orientations ...      2 of      3
+  Moving worst molecules ... 
+  Function value before moving molecules:   50.510589030779990     
+  Type         1 molecules with non-zero contributions:  100.00%
+  Moving         4 molecules of type         1
+  New positions will be based on good molecules (movebadrandom is not set) 
+   Moving:|0                                                             100%|
+          |******************************************************************|
+  Function value after moving molecules:   50.510589030779997     
+  Packing:|0                                                             100%|
+          |
+  Fixing bad orientations ...      3 of      3
+  Moving worst molecules ... 
+  Function value before moving molecules:   50.510589030779997     
+  Type         1 molecules with non-zero contributions:  100.00%
+  Moving         4 molecules of type         1
+  New positions will be based on good molecules (movebadrandom is not set) 
+   Moving:|0                                                             100%|
+          |******************************************************************|
+  Function value after moving molecules:   50.510589030779990     
+
+  Restraint-only function value:    50.510589030779990     
+  Maximum violation of the restraints:   0.37351124890695281     
+  ERROR: Packmol was unable to put the molecules
+         in the desired regions even without
+         considering distance tolerances. 
+         Probably there is something wrong with
+         the constraints, since it seems that
+         the molecules cannot satisfy them at
+         at all. 
+         Please check the spatial constraints and
+         try again.
+  >The maximum number of cycles (         200 ) was achieved.
+   You may try increasing it with the nloop keyword, as in: nloop 1000 

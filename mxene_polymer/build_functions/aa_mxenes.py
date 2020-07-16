@@ -3,6 +3,7 @@ from mxenes.utils.utils import get_fn
 
 import numpy as np
 import mbuild as mb
+import parmed as pmd
 from foyer import Forcefield
 from ilforcefields.utils.utils import get_ff, get_il
 from parmed.gromacs.gromacstop import GromacsTopologyFile
@@ -25,6 +26,7 @@ def build_alkylammonium_mxene(n_compounds, composition, periods, chain_length=12
     # CE = end carbon
     # CM = middle carbon
     # CB = branch carbon
+
     #for idx, particle in enumerate(aa.particles()):
     #    if idx == 0:
     #        particle.name = 'C_E'
@@ -90,7 +92,7 @@ def build_alkylammonium_mxene(n_compounds, composition, periods, chain_length=12
     system.save('ti3c2.top', combine='all', overwrite=True)
     write_lammpsdata(system, 'data.mxene')
 
-
+    
 def build_tam_emim_mxene(n_compounds, composition, periods, chain_length=12,
         displacement=1.1):
     """Build a MXene with TAM and EMIM in the interlayer
@@ -113,6 +115,7 @@ def build_tam_emim_mxene(n_compounds, composition, periods, chain_length=12,
             displacement=displacement,
             lateral_shift=True,
             atomtype=True)
+
    
     n_carbons = 'C' * chain_length
     aa = mb.load(f'{n_carbons}[N](C)(C)C', smiles=True)
@@ -160,6 +163,53 @@ def build_tam_emim_mxene(n_compounds, composition, periods, chain_length=12,
     change_charge(system, new_charge=0)
     system.box = ti3c2.box
    
+    system.save('ti3c2.gro', combine='all', overwrite=True)
+    system.save('ti3c2.top', combine='all', overwrite=True)
+    write_lammpsdata(system, 'data.mxene')
+    
+    
+def build_tam_custom(periods, composition, bulk_gro, bulk_top, displacement=1.1):
+    """
+    Initialize a system that uses a bulk system of TAM to fill the pores
+    """
+
+    bulk_structure = pmd.load_file(bulk_top, xyz=bulk_gro)
+    interlayer = mb.Compound()
+    interlayer.from_parmed(bulk_structure)
+
+    interlayer_2 = mb.clone(interlayer)
+    
+    lopes = get_ff('lopes')
+    
+    interlayer.translate_to([interlayer.center[0],
+        interlayer.center[1],
+        (ti3c2.box[2] / 10 - 2 * displacement) / 2 + 0.15])
+    interlayer_2.translate_to([interlayer_2.center[0],
+        interlayer_2.center[1],
+        (ti3c2.box[2] / 10 - 2 * displacement) + displacement + 0.15])
+
+    aa1PM = lopes.apply(interlayer, residues=['alkylam'],
+            assert_dihedral_params=False)
+
+    aa2PM = lopes.apply(interlayer_2, residues=['alkylam'],
+            assert_dihedral_params=False)
+
+    system = aa1PM + aa2PM + ti3c2
+    system = aa1PM + aa2PM + ti3c2
+    system = _apply_nbfixes(system)
+    system = collapse_atomtypes(system)
+    change_charge(system, new_charge=0)
+    system.box = ti3c2.box
+    for atom in system.atoms:
+        if atom.name == 'C_E':
+            atom.name = 'CE'
+        elif atom.name == 'C_M':
+            atom.name = 'CM'
+        elif atom.name == 'C_B1':
+            atom.name = 'CB1'
+        elif atom.name == 'C_B2':
+            atom.name = 'CB2'
+            
     system.save('ti3c2.gro', combine='all', overwrite=True)
     system.save('ti3c2.top', combine='all', overwrite=True)
     write_lammpsdata(system, 'data.mxene')

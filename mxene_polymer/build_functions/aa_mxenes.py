@@ -27,17 +27,22 @@ def build_alkylammonium_mxene(n_compounds, composition, periods, chain_length=12
     # CM = middle carbon
     # CB = branch carbon
 
-    #for idx, particle in enumerate(aa.particles()):
-    #    if idx == 0:
-    #        particle.name = 'C_E'
-    #    if idx == chain_length / 2:
-    #        particle.name = 'C_M'
-    #    # TODO: Find way to get branch carbon index without
-    #    # hardcoding
-    #    if idx == 13:
-    #        particle.name = 'C_B1'
-    #    if idx == 14:
-    #        particle.name = 'C_B2'
+    for idx, particle in enumerate(aa.particles()):
+        if idx == 0:
+            particle.name = 'C_E'
+        if idx == chain_length / 2:
+            particle.name = 'C_M'
+        # TODO: Find way to get branch carbon index without
+        # hardcoding
+        if particle.name == 'N':
+            n_index = idx
+        try:
+            if idx == n_index + 1:
+                particle.name = 'C_B1'
+            if idx == n_index + 2:
+                particle.name = 'C_B2'
+        except:
+            continue
 
     aa.name = 'alkylam'
     
@@ -120,6 +125,28 @@ def build_tam_emim_mxene(n_compounds, composition, periods, chain_length=12,
     n_carbons = 'C' * chain_length
     aa = mb.load(f'{n_carbons}[N](C)(C)C', smiles=True)
 
+    # Rename some carbons
+    # CE = end carbon
+    # CM = middle carbon
+    # CB = branch carbon
+
+    for idx, particle in enumerate(aa.particles()):
+        if idx == 0:
+            particle.name = 'C_E'
+        if idx == chain_length / 2:
+            particle.name = 'C_M'
+        # TODO: Find way to get branch carbon index without
+        # hardcoding
+        if particle.name == 'N':
+            n_index = idx
+        try:
+            if idx == n_index + 1:
+                particle.name = 'C_B1'
+            if idx == n_index + 2:
+                particle.name = 'C_B2'
+        except:
+            continue
+
     emim = mb.load(get_il('emim'))
     emim.name = 'emim'
 
@@ -162,6 +189,16 @@ def build_tam_emim_mxene(n_compounds, composition, periods, chain_length=12,
     system = collapse_atomtypes(system)
     change_charge(system, new_charge=0)
     system.box = ti3c2.box
+
+    for atom in system.atoms:
+        if atom.name == 'C_E':
+            atom.name = 'CE'
+        elif atom.name == 'C_M':
+            atom.name = 'CM'
+        elif atom.name == 'C_B1':
+            atom.name = 'CB1'
+        elif atom.name == 'C_B2':
+            atom.name = 'CB2'
    
     system.save('ti3c2.gro', combine='all', overwrite=True)
     system.save('ti3c2.top', combine='all', overwrite=True)

@@ -140,13 +140,12 @@ def build_tam_emim_mxene(n_compounds, composition, periods, chain_length=12,
         if particle.name == 'N':
             n_index = idx
         try:
-            if idx == n_index + 1:
-                particle.name = 'C_B1'
             if idx == n_index + 2:
                 particle.name = 'C_B2'
         except:
             continue
 
+    lopes = get_ff('lopes')
     emim = mb.load(get_il('emim'))
     emim.name = 'emim'
 
@@ -178,13 +177,29 @@ def build_tam_emim_mxene(n_compounds, composition, periods, chain_length=12,
         n_compounds=n_compounds,
         box=region2,
         fix_orientation=True)
-        
-    aa1PM = lopes.apply(aa_1, residues=['alkylam', 'emim'],
+
+    tam_cmpd = mb.Compound()
+    emim_cmpd = mb.Compound()
+
+    for child in aa_1.children:
+        if child.name == 'alkylam':
+            tam_cmpd.add(mb.clone(child))
+        elif child.name == 'emim':
+            emim_cmpd.add(mb.clone(child))
+
+    for child in aa_2.children:
+        if child.name == 'alkylam':
+            tam_cmpd.add(mb.clone(child))
+        elif child.name == 'emim':
+            emim_cmpd.add(mb.clone(child))
+
+    emimPM = lopes.apply(emim_cmpd, residues='emim',
             assert_dihedral_params=False)
-    aa2PM = lopes.apply(aa_2, residues=['alkylam', 'emim'],
+    print("EMIM atomtyped")
+    tamPM = lopes.apply(tam_cmpd, residues='alkylam',
             assert_dihedral_params=False)
 
-    system = aa1PM + aa2PM + ti3c2
+    system = ti3c2 + tamPM + emimPM
     system = _apply_nbfixes(system)
     system = collapse_atomtypes(system)
     change_charge(system, new_charge=0)
@@ -202,6 +217,7 @@ def build_tam_emim_mxene(n_compounds, composition, periods, chain_length=12,
    
     system.save('ti3c2.gro', combine='all', overwrite=True)
     system.save('ti3c2.top', combine='all', overwrite=True)
+    import pdb; pdb.set_trace()
     write_lammpsdata(system, 'data.mxene')
     
     
@@ -237,6 +253,7 @@ def build_tam_custom(periods, composition, bulk_gro, bulk_top, displacement=1.1)
     system = collapse_atomtypes(system)
     change_charge(system, new_charge=0)
     system.box = ti3c2.box
+    import pdb; pdb.set_trace()
     for atom in system.atoms:
         if atom.name == 'C_E':
             atom.name = 'CE'

@@ -44,10 +44,10 @@ def build_bulk_mxene(n_compounds, composition, periods, chain_length=12,
                            (ti3c2.box[2] / 10 - 2 * displacement) / 2 + displacement])
     region2 = mb.Box(mins=[0,
                            0,
-                           (ti3c2.box[2] / 10 - 2 * displacement) + displacement + 0.15],
+                           np.max(ti3c2.coordinates[:,2])/10],
                      maxs=[ti3c2.box[0] / 10,
                            ti3c2.box[1] / 10,
-                           (ti3c2.box[2] / 10 - 2 * displacement) + 2 + displacement])
+                           np.max(ti3c2.coordinates[:,2])/10 + displacement + 0.08])
     
     aa_1 = mb.fill_box(
         compound=aa,

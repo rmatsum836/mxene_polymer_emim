@@ -1,5 +1,6 @@
 from mxenes.structures import build_structure, change_charge, _apply_nbfixes, collapse_atomtypes
 from mxenes.utils.utils import get_fn
+from mxenes.lattices import Ti3C2Functionalized
 
 import numpy as np
 import mbuild as mb
@@ -612,12 +613,14 @@ def build_emim_in_pore(n_tam,
         periods,
         bulk_density,
         n_pore_emim,
+        lattice=Ti3C2Functionalized,
         chain_length=12,
         displacement=1.1,
         emim_ff='kpl',
         taa_ff='seiji'):
     displacement -= 0.08
-    ti3c2 = build_structure(periods=periods,
+    ti3c2 = build_structure(lattice=lattice,
+            periods=periods,
             composition=composition,
             displacement=displacement,
             lateral_shift=True,

@@ -995,7 +995,6 @@ def build_two_mxene_pores(composition, periods, bulk_length, n_il, n_tam=20,
                             atom.charge = 0.18
 
     if n_tam != 0:
-        #ils = pore1_aa1PM + pore1_aa2PM + pore2_aa1PM + pore2_aa2PM + cationPM + anionPM
         ils = tamPM + cationPM + anionPM
     elif n_il[0] != 0 or n_il[1] != 0:
         ils = cationPM + anionPM

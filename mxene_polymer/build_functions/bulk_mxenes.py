@@ -1,6 +1,7 @@
 from mxenes.structures import build_structure, change_charge, _apply_nbfixes, collapse_atomtypes
 from mxenes.utils.utils import get_fn
 from mxenes.lattices import Ti3C2Functionalized
+from copy import deepcopy
 
 import numpy as np
 import mbuild as mb
@@ -641,6 +642,28 @@ def build_emim_in_pore(n_tam,
     emim.name = 'emim'
     tf2n.name = 'tf2n'
     aa.name = 'tam'
+
+    # Rename some carbons
+    # CE = end carbon
+    # CM = middle carbon
+    # CB = branch carbon
+
+    for idx, particle in enumerate(aa.particles()):
+        if idx == 0:
+            particle.name = 'C_E'
+        if idx == chain_length / 2:
+            particle.name = 'C_M'
+        # TODO: Find way to get branch carbon index without
+        # hardcoding
+        if particle.name == 'N':
+            n_index = idx
+        try:
+            if idx == n_index + 1:
+                particle.name = 'C_B1'
+            if idx == n_index + 2:
+                particle.name = 'C_B2'
+        except:
+            continue
     
     taaff = get_ff(taa_ff)
     if emim_ff == 'kpl':
@@ -730,7 +753,7 @@ def build_emim_in_pore(n_tam,
                 assert_dihedral_params=False)
 
     if emim_ff == 'lopes':
-        print("Scaling EMIM-TFSI charges...")
+        print("Scaling EMIM-TF2N charges...")
         for atom in cationPM.atoms:
             atom.charge *= 0.8
         for atom in anionPM.atoms:
@@ -763,6 +786,241 @@ def build_emim_in_pore(n_tam,
     system.box[0] = max_ti3c2[0]
     system.box[1] = bulk.boundingbox.maxs[1] * 10
     system.box[2] = max_ti3c2[2] + (displacement*10) + .8
+    for atom in system.atoms:
+        if atom.name == 'C_E':
+            atom.name = 'CE'
+        elif atom.name == 'C_M':
+            atom.name = 'CM'
+        elif atom.name == 'C_B1':
+            atom.name = 'CB1'
+        elif atom.name == 'C_B2':
+            atom.name = 'CB2'
    
+    system.save('ti3c2.gro', combine='all', overwrite=True)
+    system.save('ti3c2.top', combine='all', overwrite=True)
+
+
+def build_two_mxene_pores(composition, periods, bulk_length, n_il, n_tam=20,
+        chain_length=12, displacement=1.1, emim_ff='kpl', tam_ff='seiji'):
+    """Build system with two MXene pores in between a bulk region of EMIM-TF2N
+    composition : dict
+        Composition of surface groups
+    periods : list of length 3
+        Periods in which to build MXene crystal
+    bulk_legnth : float
+        length of bulk region between MXene pores
+    n_il : list, [n_emim, n_tf2n]
+        Number of IL molecules to add into bulk region. 
+        Half of this value is added to side regions.
+        If value is odd number, then the number of compounds in the side regions are rounded.
+    n_tam : int, default=20
+        Number of TAM molecules to add into pore
+    chain_length : int, default=12
+        Chain length of TAM
+    displacement : float, default=1.1 nm
+        Displacement of MXene pore
+    emim_ff : str, default="kpl"
+        ForceField to apply to EMIM-TF2N
+    tam_ff : str , default="seiji"
+        ForceField to apply to TAM
+    """
+    displacement -= 0.08
+    ti3c2 = build_structure(periods=periods,
+            composition=composition,
+            displacement=displacement,
+            lateral_shift=True,
+            atomtype=True)
+
+    second_ti3c2 = deepcopy(ti3c2)
+    for atom in second_ti3c2.atoms:
+        atom.xy += (bulk_length * 10) + ti3c2.box[1] # Convert nm to angstrom
+   
+    n_carbons = 'C' * chain_length
+    aa = mb.load(f'{n_carbons}[N](C)(C)C', smiles=True)
+    emim = mb.load(get_il('emim'))
+    tf2n = mb.load(get_il('tf2n'))
+    emim.name = 'emim'
+    tf2n.name = 'tf2n'
+    aa.name = 'tam'
+    
+    tam_ff_object = get_ff(tam_ff)
+    emim_ff_object = get_ff(emim_ff)
+
+    # Get mins and maxs for second pore
+    mins = np.min([i.xy for i in second_ti3c2.atoms])
+    maxs = np.max([i.xy for i in second_ti3c2.atoms])
+
+    bulk_region = mb.Box(mins=[0,
+                               ti3c2.box[1]/10,
+                               0],
+                         maxs=[ti3c2.box[0]/10,
+                               ti3c2.box[1]/10 + bulk_length,
+                               ti3c2.box[2]/10])
+
+    # Fill regions on side of MXene pores
+    side_region_1 = mb.Box(mins=[0,
+                               -bulk_length/2,
+                               0],
+                         maxs=[ti3c2.box[0]/10,
+                               0,
+                               ti3c2.box[2]/10])
+
+    side_region_2 = mb.Box(mins=[0,
+                               maxs/10,
+                               0],
+                         maxs=[ti3c2.box[0]/10,
+                               maxs/10 + bulk_length/2, 
+                               ti3c2.box[2]/10])
+    
+    pore1_region1 = mb.Box(mins=[0,
+                           0,
+                           (ti3c2.box[2] / 10 - 2 * displacement) / 2 + 0.15],
+                     maxs=[ti3c2.box[0] / 10,
+                           ti3c2.box[1] / 10,
+                           (ti3c2.box[2] / 10 - 2 * displacement) / 2 + displacement])
+    pore1_region2 = mb.Box(mins=[0,
+                           0,
+                           np.max(ti3c2.coordinates[:,2])/10],
+                     maxs=[ti3c2.box[0] / 10,
+                           ti3c2.box[1] / 10,
+                           np.max(ti3c2.coordinates[:,2])/10 + displacement + 0.08])
+
+    pore2_region1 = mb.Box(mins=[0,
+                           mins / 10,
+                           (ti3c2.box[2] / 10 - 2 * displacement) / 2 + 0.15],
+                     maxs=[ti3c2.box[0] / 10,
+                           maxs / 10,
+                           (ti3c2.box[2] / 10 - 2 * displacement) / 2 + displacement])
+    pore2_region2 = mb.Box(mins=[0,
+                           mins / 10,
+                           np.max(ti3c2.coordinates[:,2])/10],
+                     maxs=[ti3c2.box[0] / 10,
+                           maxs / 10,
+                           np.max(ti3c2.coordinates[:,2])/10 + displacement + 0.08])
+    
+    if n_tam != 0:
+        pore1_aa_1 = mb.fill_box(
+            compound=aa,
+            n_compounds=n_tam,
+            box=pore1_region1,
+            )
+
+        pore1_aa_2 = mb.fill_box(
+            compound=aa,
+            n_compounds=n_tam,
+            box=pore1_region2,
+            )
+        pore2_aa_1 = mb.fill_box(
+            compound=aa,
+            n_compounds=n_tam,
+            box=pore2_region1,
+            )
+
+        pore2_aa_2 = mb.fill_box(
+            compound=aa,
+            n_compounds=n_tam,
+            box=pore2_region2,
+            )
+
+        tam_compounds = mb.Compound()
+        for cmpd in [pore1_aa_1, pore1_aa_2, pore2_aa_1, pore2_aa_2]:
+            tam_compounds.add(mb.clone(cmpd))
+
+        #pore1_aa1PM = tam_ff_object.apply(pore1_aa_1, residues=['tam'],
+        #        assert_dihedral_params=False)
+        tamPM = tam_ff_object.apply(tam_compounds, residues=['tam'],
+                assert_dihedral_params=False)
+        #pore1_aa2PM = tam_ff_object.apply(pore1_aa_2, residues=['tam'],
+        #        assert_dihedral_params=False)
+        #pore2_aa1PM = tam_ff_object.apply(pore2_aa_1, residues=['tam'],
+        #        assert_dihedral_params=False)
+        #pore2_aa2PM = tam_ff_object.apply(pore2_aa_2, residues=['tam'],
+        #        assert_dihedral_params=False)
+
+    if n_il[0] != 0 or n_il[1] != 0:
+        bulk = mb.fill_box(
+            compound=[emim, tf2n],
+            n_compounds=[n_il[0], n_il[1]],
+            box=bulk_region,
+            fix_orientation=True)
+
+        side1 = mb.fill_box(
+            compound=[emim, tf2n],
+            n_compounds=[round(n_il[0]/2), round(n_il[1]/2)],
+            box=side_region_1,
+            fix_orientation=True)
+
+        side2 = mb.fill_box(
+            compound=[emim, tf2n],
+            n_compounds=[round(n_il[0]/2), round(n_il[1]/2)],
+            box=side_region_2,
+            fix_orientation=True)
+
+        cation = mb.Compound()
+        anion = mb.Compound()
+
+        for child in bulk.children:
+            if child.name == 'emim':
+                cation.add(mb.clone(child))
+            else:
+                anion.add(mb.clone(child))
+        for child in side1.children:
+            if child.name == 'emim':
+                cation.add(mb.clone(child))
+            else:
+                anion.add(mb.clone(child))
+        for child in side2.children:
+            if child.name == 'emim':
+                cation.add(mb.clone(child))
+            else:
+                anion.add(mb.clone(child))
+            
+
+        cationPM = emim_ff_object.apply(cation, residues='emim',
+                assert_dihedral_params=False)
+        anionPM = emim_ff_object.apply(anion, residues='tf2n',
+                    assert_dihedral_params=False)
+
+    if tam_ff == 'seiji':
+        for atom in tamPM.atoms:
+            if atom.type == 'seiji_004':
+                for bond in atom.bonds:
+                    if 'seiji_006' in (bond.atom1.type, bond.atom2.type):
+                        atom.charge = -0.16
+                    continue
+            if atom.type == 'seiji_005':
+                for bond in atom.bonds:
+                    if 'seiji_004' in (bond.atom1.type, bond.atom2.type):
+                        if -0.16 in (bond.atom1.charge, bond.atom2.charge):
+                            atom.charge = 0.18
+
+    if n_tam != 0:
+        #ils = pore1_aa1PM + pore1_aa2PM + pore2_aa1PM + pore2_aa2PM + cationPM + anionPM
+        ils = tamPM + cationPM + anionPM
+    elif n_il[0] != 0 or n_il[1] != 0:
+        ils = cationPM + anionPM
+
+    if emim_ff == 'lopes':
+        for atom in ils.atoms:
+            atom.charge *= 0.8
+    if n_tam != 0 or n_il[0] != 0 or n_il[1] != 0:
+        system = ils + ti3c2 + second_ti3c2
+    else:
+        system = ti3c2 + second_ti3c2
+    system = _apply_nbfixes(system)
+    system = collapse_atomtypes(system)
+    change_charge(system, new_charge=0)
+    max_ti3c2 = np.max(ti3c2.coordinates, axis=0)
+    system.box[0] = max_ti3c2[0]
+    if n_il[0] != 0 or n_il[1] != 0:
+        system.box[1] = ti3c2.box[1] * 2 + (bulk_length*2) * 10
+    else:
+        system.box[1] = ti3c2.box[1] * 2 + (bulk_length*2) * 10
+    system.box[2] = max_ti3c2[2] + (displacement*10) + .8
+
+    # Shift all atoms into box
+    for atom in system.atoms:
+        atom.xy += (bulk_length/2) * 10
+
     system.save('ti3c2.gro', combine='all', overwrite=True)
     system.save('ti3c2.top', combine='all', overwrite=True)

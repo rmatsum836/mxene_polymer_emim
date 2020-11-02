@@ -76,11 +76,23 @@ def _compute_ring_angles(universe, tam_length, cutoff):
             # Only consider ions in the pore
             if ring_group.center_of_mass()[1] < 5 or ring_group.center_of_mass()[1] > 45:
                 continue
+            # Check which side of pore ion is on to determine normal vector of surface
+            if pore1:
+                if ring_group.positions[0][2] < (z_length + (z_length+cutoff)) / 2:
+                    side_of_pore = 1
+                else:
+                    side_of_pore = -1
+            if pore2:
+                if ring_group.positions[0][2] < (9.37 + (9.37+cutoff)) / 2:
+                    side_of_pore = 1
+                else:
+                    side_of_pore = -1
             xyz = ring_group.positions 
             AB = xyz[1, :] - xyz[0, :]
             AC = xyz[2, :] - xyz[0, :]
             plane_vector = np.cross(AB, AC) 
-            ring_angles[n_frame, n_ring] = angle_between([plane_vector[0], plane_vector[1], plane_vector[2]], [0, 0, 1]) * (180 / np.pi)
+            #ring_angles[n_frame, n_ring] = angle_between([plane_vector[0], plane_vector[1], plane_vector[2]], [0, 0, 1]) * (180 / np.pi)
+            ring_angles[n_frame, n_ring] = angle_between([plane_vector[0], plane_vector[1], plane_vector[2]], [0, 0, side_of_pore]) * (180 / np.pi)
 
     ring_angles = ring_angles.reshape((-1))
     ring_angles = ring_angles[np.logical_not(np.isnan(ring_angles))]
@@ -90,12 +102,22 @@ def _compute_ring_angles(universe, tam_length, cutoff):
         header='Count\tAngle')
     np.savetxt(f'ring_angles_{cutoff}.txt', np.asarray(ring_angles))
     fig, ax = plt.subplots()
-    ax.hist(ring_angles, bins=180, range=(0.0, 180.0), density=True)
+    counts, angle_bins, bars = ax.hist(ring_angles, bins=180, range=(0.0, 180.0), density=True)
+    angle_bins_center = (angle_bins[:-1] + angle_bins[1:])/2
     plt.xlim((0, 180))
     plt.xlabel('Angle (degrees)')
     plt.ylabel('Probability')
-    fig.savefig(f'ring_angles_{cutoff}.pdf')
-
+    fig.savefig(f'unnormalized_ring_angles_{cutoff}.pdf')
+   
+    normalized_counts = np.divide(counts,
+        abs(np.sin((np.pi / 180)*angle_bins_center)))
+    fig, ax = plt.subplots()
+    arr = ax.hist(angle_bins_center, weights=normalized_counts, bins=180, range=(0.0, 180.0),
+        density=False)
+    plt.xlim((0, 180))
+    plt.xlabel('Angle (degrees)')
+    plt.ylabel('Probability')
+    fig.savefig(f'normalized_ring_angles_{cutoff}.pdf')
 
 def _compute_tail_angles(universe, tam_length, cutoff):
     #tail_groups = [universe.select_atoms('type kpl_014 kpl_016 and resid {} and not bonded type kpl_016'.format(r.resid)) for r in universe.residues if r.resname == 'emim']
@@ -126,6 +148,17 @@ def _compute_tail_angles(universe, tam_length, cutoff):
                 continue
             if tail_group.center_of_mass()[1] < 5 or tail_group.center_of_mass()[1] > 45:
                 continue
+            # Check which side of pore ion is on to determine normal vector of surface
+            if pore1:
+                if tail_group.positions[0][2] < (z_length + (z_length+cutoff)) / 2:
+                    side_of_pore = 1
+                else:
+                    side_of_pore = -1
+            if pore2:
+                if tail_group.positions[0][2] < (9.37 + (9.37+cutoff)) / 2:
+                    side_of_pore = 1
+                else:
+                    side_of_pore = -1
             xyz = tail_group.positions 
             plane_vector = xyz[1] - xyz[0]
             tail_angles[n_frame, n_tail] = angle_between([plane_vector[0], plane_vector[1], plane_vector[2]], [0, 0, 1]) * (180 / np.pi)
@@ -138,12 +171,23 @@ def _compute_tail_angles(universe, tam_length, cutoff):
         header='Count\tAngle')
     np.savetxt(f'tail_angles_{cutoff}.txt', np.asarray(tail_angles))
     fig, ax = plt.subplots()
-    ax.hist(tail_angles, bins=180, range=(0.0, 180.0), density=True)
+    counts, angle_bins, bars = ax.hist(tail_angles, bins=180, range=(0.0, 180.0), density=True)
+    angle_bins_center = (angle_bins[:-1] + angle_bins[1:])/2
     plt.xlim((0, 180))
     plt.ylim((0, 0.06))
     plt.xlabel('Angle (degrees)')
     plt.ylabel('Probability')
-    fig.savefig(f'tail_angles_{cutoff}.pdf')
+    fig.savefig(f'unnormalized_tail_angles_{cutoff}.pdf')
+
+    normalized_counts = np.divide(counts,
+        abs(np.sin((np.pi / 180)*angle_bins_center)))
+    fig, ax = plt.subplots()
+    arr = ax.hist(angle_bins_center, weights=normalized_counts, bins=180, range=(0.0, 180.0),
+        density=False)
+    plt.xlim((0, 180))
+    plt.xlabel('Angle (degrees)')
+    plt.ylabel('Probability')
+    fig.savefig(f'normalized_tail_angles_{cutoff}.pdf')
 
 def _compute_taa_angles(universe, tam_length, cutoff):
     #taa_groups = [universe.select_atoms('(type seiji_007 and resid {} and bonded type seiji_008) or (type seiji_008 and resid {})'.format(r.resid, r.resid)) for r in universe.residues if r.resname == 'tam']
@@ -174,6 +218,17 @@ def _compute_taa_angles(universe, tam_length, cutoff):
                 continue
             if taa_group.center_of_mass()[1] < 5 or taa_group.center_of_mass()[1] > 45:
                 continue
+            # Check which side of pore ion is on to determine normal vector of surface
+            if pore1:
+                if taa_group.positions[0][2] < (z_length + (z_length+cutoff)) / 2:
+                    side_of_pore = 1
+                else:
+                    side_of_pore = -1
+            if pore2:
+                if taa_group.positions[0][2] < (9.37 + (9.37+cutoff)) / 2:
+                    side_of_pore = 1
+                else:
+                    side_of_pore = -1
             xyz = taa_group.positions 
             plane_vector = xyz[1] - xyz[0]
             taa_angles[n_frame, n_taa] = angle_between([plane_vector[0], plane_vector[1], plane_vector[2]], [0, 0, 1]) * (180 / np.pi)
@@ -187,11 +242,22 @@ def _compute_taa_angles(universe, tam_length, cutoff):
         header='Count\tAngle')
     np.savetxt(f'taa_angles_{cutoff}.txt', np.asarray(taa_angles))
     fig, ax = plt.subplots()
-    ax.hist(taa_angles, bins=180, range=(0.0, 180.0), density=True)
+    counts, angle_bins, bars = ax.hist(taa_angles, bins=180, range=(0.0, 180.0), density=True)
+    angle_bins_center = (angle_bins[:-1] + angle_bins[1:])/2
     plt.xlim((0, 180))
     plt.xlabel('Angle (degrees)')
     plt.ylabel('Probability')
-    fig.savefig(f'taa_angles_{cutoff}.pdf')
+    fig.savefig(f'unnormalized_taa_angles_{cutoff}.pdf')
+
+    normalized_counts = np.divide(counts,
+        abs(np.sin((np.pi / 180)*angle_bins_center)))
+    fig, ax = plt.subplots()
+    arr = ax.hist(angle_bins_center, weights=normalized_counts, bins=180, range=(0.0, 180.0),
+        density=False)
+    plt.xlim((0, 180))
+    plt.xlabel('Angle (degrees)')
+    plt.ylabel('Probability')
+    fig.savefig(f'normalized_taa_angles_{cutoff}.pdf')
 
 def get_center(bins):
     new_bins = list()

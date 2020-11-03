@@ -150,14 +150,15 @@ def _compute_tail_angles(universe, tam_length, cutoff):
                 continue
             # Check which side of pore ion is on to determine normal vector of surface
             if pore1:
-                if tail_group.positions[0][2] < (z_length + (z_length+cutoff)) / 2:
+                #if tail_group.positions[0][2] < (z_length + (z_length+cutoff)) / 2:
+                if tail_group.center_of_mass()[2] < (z_length + (z_length+cutoff)) / 2:
                     side_of_pore = 1
-                else:
+                elif tail_group.center_of_mass()[2] > (z_length + (z_length+cutoff)) / 2:
                     side_of_pore = -1
             if pore2:
-                if tail_group.positions[0][2] < (9.37 + (9.37+cutoff)) / 2:
+                if tail_group.center_of_mass()[2] < (9.37 + (9.37+cutoff)) / 2:
                     side_of_pore = 1
-                else:
+                elif tail_group.center_of_mass()[2] > (9.37 + (9.37+cutoff)) / 2:
                     side_of_pore = -1
             xyz = tail_group.positions 
             plane_vector = xyz[1] - xyz[0]

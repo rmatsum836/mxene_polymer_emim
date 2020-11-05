@@ -17,7 +17,7 @@ def number_density(path):
     None 
     """
     fig, ax = plt.subplots()
-    trj = md.load(f'{path}/sample_2.trr', top=f'{path}/sample_2.gro')
+    trj = md.load(f'{path}/sample_res.trr', top=f'{path}/sample_2.gro')
     mxene_trj = trj.atom_slice(trj.topology.select('resname RES'))
     #area = np.max(mxene_trj.xyz[:,:,0]) * np.max(mxene_trj.xyz[:,:,1]-3)
     area = np.max(mxene_trj.xyz[:,:,0]) * np.max(mxene_trj.xyz[:,:,1])
@@ -26,7 +26,8 @@ def number_density(path):
     volume = area * (box_range[1] - box_range[0])
 
     maxs = np.array([np.max(mxene_trj.xyz[:,:,0]), np.max(mxene_trj.xyz[:,:,1]), np.max(trj.xyz[:,:,2])])
-    mins = np.array([0, 0, 0])
+    mins = np.array([np.min(mxene_trj.xyz[:,:,0]), np.min(mxene_trj.xyz[:,:,1]), np.min(trj.xyz[:,:,2])])
+    #mins = np.array([0, 0, 0])
     dims = maxs - mins
 
     rho, bins, res_list = calc_number_density(
@@ -62,7 +63,7 @@ def atom_number_density(path):
     None 
     """
     fig, ax = plt.subplots()
-    trj = md.load(f'{path}/sample_2.trr', top=f'{path}/ti3c2.gro')
+    trj = md.load(f'{path}/sample_res.trr', top=f'{path}/ti3c2.gro')
     mxene_trj = trj.atom_slice(trj.topology.select('resname RES'))
     area = np.max(mxene_trj.xyz[:,:,0]) * np.max(mxene_trj.xyz[:,:,1]-3)
     dim = 2
@@ -158,9 +159,9 @@ def calc_pore_density():
         print(np.mean(mean))
 
 if __name__ == '__main__':
-    atom_number_density('12/kpl_seiji/1415_no_shift')
-    atom_number_density('16/kpl_seiji/1410_no_shift')
-    #number_density('12/kpl_seiji/1415_no_shift')
-    #number_density('16/kpl_seiji/1410_no_shift')
+    #atom_number_density('12/kpl_seiji/1415_no_shift')
+    #atom_number_density('16/kpl_seiji/1410_no_shift')
+    number_density('12/kpl_seiji/1415_no_shift')
+    number_density('16/kpl_seiji/1410_no_shift')
     #calc_rg('12/kpl_lopes/1515_density')
     #calc_rg('16/1514_density')

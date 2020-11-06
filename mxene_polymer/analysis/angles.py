@@ -117,6 +117,7 @@ def _compute_ring_angles(universe, tam_length, cutoff):
     plt.xlabel('Angle (degrees)')
     plt.ylabel('Probability')
     fig.savefig(f'normalized_ring_angles_{cutoff}.pdf')
+    np.savetxt(f'normalized_ring_angles_{cutoff}.txt', np.transpose(np.vstack([angle_bins_center, normalized_counts])), header="bins\tnormalized counts")
 
 def _compute_tail_angles(universe, tam_length, cutoff):
     #tail_groups = [universe.select_atoms('type kpl_014 kpl_016 and resid {} and not bonded type kpl_016'.format(r.resid)) for r in universe.residues if r.resname == 'emim']

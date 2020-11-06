@@ -34,7 +34,6 @@ def compute_angles(top_file, trj_file, tam_length, angle_type='ring', cutoff=7.0
         distance from wall to consider
     """
     universe = MDAnalysis.Universe(top_file, trj_file)
-    
     box = universe.select_atoms('all').bbox()
     if cutoff == None:
         if tam_length == 12:
@@ -73,8 +72,8 @@ def _compute_ring_angles(universe, tam_length, cutoff):
             pore2 = ring_group.center_of_mass()[2] > 9.37 or ring_group.center_of_mass()[2] < 9.37 + cutoff
             if not pore1 or not pore2:
                 continue
-            # Only consider ions in the pore
-            if ring_group.center_of_mass()[1] < 5 or ring_group.center_of_mass()[1] > 45:
+            # Only consider ions in the pore, max is hardcoded to edge of MXene sheet
+            if ring_group.center_of_mass()[1] < 10 or ring_group.center_of_mass()[1] > (54.67-10):
                 continue
             # Check which side of pore ion is on to determine normal vector of surface
             if pore1:
@@ -146,7 +145,8 @@ def _compute_tail_angles(universe, tam_length, cutoff):
             pore2 = tail_group.center_of_mass()[2] > 9.37 or tail_group.center_of_mass()[2] < 9.37 + cutoff
             if not pore1 or not pore2:
                 continue
-            if tail_group.center_of_mass()[1] < 5 or tail_group.center_of_mass()[1] > 45:
+            # Only consider ions in the pore, max is hardcoded to edge of MXene sheet
+            if tail_group.center_of_mass()[1] < 10 or tail_group.center_of_mass()[1] > (54.67-10):
                 continue
             # Check which side of pore ion is on to determine normal vector of surface
             if pore1:
@@ -217,7 +217,8 @@ def _compute_taa_angles(universe, tam_length, cutoff):
             pore2 = taa_group.center_of_mass()[2] > 9.37 or taa_group.center_of_mass()[2] < 9.37 + cutoff
             if not pore1 or not pore2:
                 continue
-            if taa_group.center_of_mass()[1] < 5 or taa_group.center_of_mass()[1] > 45:
+            # Only consider ions in the pore, max is hardcoded to edge of MXene sheet
+            if taa_group.center_of_mass()[1] < 10 or taa_group.center_of_mass()[1] > (54.67-10):
                 continue
             # Check which side of pore ion is on to determine normal vector of surface
             if pore1:

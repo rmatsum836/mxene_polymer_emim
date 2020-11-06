@@ -4,6 +4,7 @@ import seaborn
 from matplotlib.ticker import MultipleLocator
 
 def plot_angles():
+    plt.style.use('seaborn-colorblind')
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8,4))
     cutoff_12 = 11.13
     path_12 = "12/kpl_seiji/1415_no_shift"
@@ -49,6 +50,7 @@ def plot_angles():
 
 
 def plot_number_density():
+    plt.style.use('seaborn-colorblind')
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8,4))
     cutoff_12 = 11.13
     path_12 = "12/kpl_seiji/1415_no_shift"
@@ -100,5 +102,57 @@ def plot_number_density():
     fig.tight_layout()
     fig.savefig(f'figures/number_density.pdf', bbox_inches='tight')
 
+def plot_tam_number_density():
+    plt.style.use('seaborn-colorblind')
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10,4))
+    cutoff_12 = 11.13
+    path_12 = "12/kpl_seiji/1415_no_shift"
+    cutoff_16 = 14.0
+    path_16 = "16/kpl_seiji/1410_no_shift"
+    paths = (path_12, path_16)
+    cutoffs = (cutoff_12, cutoff_16)
+    for idx, (cutoff, path) in enumerate(zip(cutoffs, paths)):
+        ax = axes[idx] 
+        if idx == 0:
+            str_label = 'a)'
+        else:
+            str_label = 'b)'
+
+        ax.text(0.05, 0.90, str_label, transform=ax.transAxes,
+            size=16, weight='bold')
+
+        data = np.loadtxt(f'{path}/taa_atom_numden.txt')
+        bins = data[:,0]
+        taa_n = data[:,1]
+        emim_end = data[:,2]
+        emim_mid = data[:,3]
+        emim_branch = data[:,4]
+    
+        for k, v in {'N': taa_n, 'Terminal C': emim_end, 'Branch C': emim_branch}.items():
+            ax.plot(bins, v, label=k)
+    
+        ax.set_xlabel('z, nm', fontsize=16)
+        ax.set_ylabel(r'$ \mathrm{\rho(z)}, \mathrm{nm}^{-3}$', fontsize=16)
+        if idx == 0:
+            ax.set_xlim((1, 4.0))
+        else:
+            ax.set_xlim((1, 4.65))
+        ax.set_ylim((0, 4))
+        ax.xaxis.set_major_locator(MultipleLocator(1))
+        ax.xaxis.set_minor_locator(MultipleLocator(0.2))
+
+    legend_ax = ax
+    handles, labels = legend_ax.get_legend_handles_labels()
+    lgd = fig.legend(handles, 
+            labels,
+            bbox_to_anchor=(0.5, 1.08),
+            fontsize=12,
+            loc='upper center',
+            ncol=4)
+    fig.tight_layout()
+    fig.savefig(f'figures/taa_number_density.pdf', bbox_inches='tight')
+
+
 #plot_angles()
-plot_number_density()
+#plot_number_density()
+plot_tam_number_density()

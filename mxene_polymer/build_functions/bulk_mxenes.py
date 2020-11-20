@@ -612,13 +612,20 @@ def build_vacuum_mxene(n_compounds, composition, periods, chain_length=12,
 def build_emim_in_pore(n_tam,
         composition,
         periods,
-        bulk_density,
         n_pore_emim,
         lattice=Ti3C2Functionalized,
+        bulk_density=None,
+        bulk_n_ions=None,
         chain_length=12,
         displacement=1.1,
         emim_ff='kpl',
         taa_ff='seiji'):
+
+    if bulk_density is None and bulk_n_ions is None:
+        raise TypeError("`bulk_density` and `bulk_n_ions` cannot both be of type None")
+    if bulk_density and bulk_n_ions:
+        raise TypeError("Either `bulk_density` or `bulk_n_ions` should be of type None")
+
     displacement -= 0.08
     ti3c2 = build_structure(lattice=lattice,
             periods=periods,
@@ -674,7 +681,7 @@ def build_emim_in_pore(n_tam,
                                0],
                          maxs=[ti3c2.box[0]/10,
                                ti3c2.box[1]/10 + 10,
-                               ti3c2.box[2]/10])
+                               ti3c2.box[2]/10-0.05])
     
     region1 = mb.Box(mins=[0,
                            0,
@@ -713,12 +720,19 @@ def build_emim_in_pore(n_tam,
     aaPM = taaff.apply(aa_compound, residues='tam',
             assert_dihedral_params=False)
 
-    bulk = mb.fill_box(
-        compound=[emim, tf2n],
-        density=bulk_density,
-        compound_ratio=[0.5, 0.5],
-        box=bulk_region,
-        fix_orientation=True)
+    if bulk_density:
+        bulk = mb.fill_box(
+            compound=[emim, tf2n],
+            density=bulk_density,
+            compound_ratio=[0.5, 0.5],
+            box=bulk_region,
+            fix_orientation=True)
+    elif bulk_n_ions:
+        bulk = mb.fill_box(
+            compound=[emim, tf2n],
+            n_compounds=[bulk_n_ions, bulk_n_ions],
+            box=bulk_region,
+            fix_orientation=True)
 
     cation = mb.Compound()
     anion = mb.Compound()

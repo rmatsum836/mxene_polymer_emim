@@ -51,21 +51,22 @@ def compute_angles(top_file, trj_file, tam_length, angle_type='ring', cutoff=7.0
 def _compute_ring_angles(universe, tam_length, cutoff):
     ring_groups = [universe.select_atoms('type kpl_012 kpl_011 and resid {}'.format(r.resid)) for r in universe.residues if r.resname == 'emim']
 
-    ring_angles = np.nan * np.empty(shape=(universe.trajectory.n_frames, len(ring_groups)))
+    #ring_angles = np.nan * np.empty(shape=(universe.trajectory.n_frames-1000, len(ring_groups)))
+    ring_angles = np.nan * np.empty(shape=(4000, len(ring_groups)))
     """
     >>> np.where(np.isnan([4, 4, ]))[0].shape[0]
     0
     >>> np.where(np.isnan(x))[0].shape[0]
     4
     """
-    for n_frame, frame in enumerate(universe.trajectory[::1]):
+    for n_frame, frame in enumerate(universe.trajectory[:4000:1]):
         for n_ring, ring_group in enumerate(ring_groups):
             # For some reason the zero frame exists twice
             if n_frame == 0:
                 continue
             # Consider first layer of ions
             if tam_length == 12:
-                z_length = 28.37
+                z_length = 29.47
             elif tam_length == 16:
                 z_length = 32.62
             pore1 = ring_group.center_of_mass()[2] > z_length or ring_group.center_of_mass()[2] < z_length + cutoff
@@ -95,13 +96,13 @@ def _compute_ring_angles(universe, tam_length, cutoff):
 
     ring_angles = ring_angles.reshape((-1))
     ring_angles = ring_angles[np.logical_not(np.isnan(ring_angles))]
-    histo = np.histogram(ring_angles, bins=180, range=(0.0, 180.0), density=True)
+    histo = np.histogram(ring_angles, bins=90, range=(0.0, 180.0), density=True)
     new_bins = get_center(histo[1])
     np.savetxt(f'histo_ring_angles_{cutoff}.txt', np.transpose(np.vstack([new_bins, histo[0]])),
         header='Count\tAngle')
     np.savetxt(f'ring_angles_{cutoff}.txt', np.asarray(ring_angles))
     fig, ax = plt.subplots()
-    counts, angle_bins, bars = ax.hist(ring_angles, bins=180, range=(0.0, 180.0), density=True)
+    counts, angle_bins, bars = ax.hist(ring_angles, bins=90, range=(0.0, 180.0), density=True)
     angle_bins_center = (angle_bins[:-1] + angle_bins[1:])/2
     plt.xlim((0, 180))
     plt.xlabel('Angle (degrees)')
@@ -111,7 +112,7 @@ def _compute_ring_angles(universe, tam_length, cutoff):
     normalized_counts = np.divide(counts,
         abs(np.sin((np.pi / 180)*angle_bins_center)))
     fig, ax = plt.subplots()
-    arr = ax.hist(angle_bins_center, weights=normalized_counts, bins=180, range=(0.0, 180.0),
+    arr = ax.hist(angle_bins_center, weights=normalized_counts, bins=90, range=(0.0, 180.0),
         density=False)
     plt.xlim((0, 180))
     plt.xlabel('Angle (degrees)')
@@ -123,7 +124,8 @@ def _compute_tail_angles(universe, tam_length, cutoff):
     #tail_groups = [universe.select_atoms('type kpl_014 kpl_016 and resid {} and not bonded type kpl_016'.format(r.resid)) for r in universe.residues if r.resname == 'emim']
     tail_groups = [universe.select_atoms('(type kpl_010 and resid {} and around 3 type kpl_016) or (type kpl_016 and resid {})'.format(r.resid, r.resid)) for r in universe.residues if r.resname == 'emim']
 
-    tail_angles = np.nan * np.empty(shape=(universe.trajectory.n_frames, len(tail_groups)))
+    #tail_angles = np.nan * np.empty(shape=(universe.trajectory.n_frames-1000, len(tail_groups)))
+    tail_angles = np.nan * np.empty(shape=(4000, len(tail_groups)))
     """
     >>> np.where(np.isnan([4, 4, ]))[0].shape[0]
     0
@@ -131,7 +133,7 @@ def _compute_tail_angles(universe, tam_length, cutoff):
     4
     """
 
-    for n_frame, frame in enumerate(universe.trajectory[::1]):
+    for n_frame, frame in enumerate(universe.trajectory[:4000:1]):
         for n_tail, tail_group in enumerate(tail_groups):
             # For some reason the zero frame exists twice
             if n_frame == 0:
@@ -139,7 +141,7 @@ def _compute_tail_angles(universe, tam_length, cutoff):
             # Consider first layer of ions
             #if ring_group.center_of_mass()[2] > 6.82 + 5.0:
             if tam_length == 12:
-                z_length = 28.37
+                z_length = 29.47
             elif tam_length == 16:
                 z_length = 32.62
             pore1 = tail_group.center_of_mass()[2] > z_length and tail_group.center_of_mass()[2] < (z_length+cutoff)
@@ -167,13 +169,13 @@ def _compute_tail_angles(universe, tam_length, cutoff):
 
     tail_angles = tail_angles.reshape((-1))
     tail_angles = tail_angles[np.logical_not(np.isnan(tail_angles))]
-    histo = np.histogram(tail_angles, bins=180, range=(0.0, 180.0), density=True)
+    histo = np.histogram(tail_angles, bins=90, range=(0.0, 180.0), density=True)
     new_bins = get_center(histo[1])
     np.savetxt(f'histo_tail_angles_{cutoff}.txt', np.transpose(np.vstack([new_bins, histo[0]])),
         header='Count\tAngle')
     np.savetxt(f'tail_angles_{cutoff}.txt', np.asarray(tail_angles))
     fig, ax = plt.subplots()
-    counts, angle_bins, bars = ax.hist(tail_angles, bins=180, range=(0.0, 180.0), density=True)
+    counts, angle_bins, bars = ax.hist(tail_angles, bins=90, range=(0.0, 180.0), density=True)
     angle_bins_center = (angle_bins[:-1] + angle_bins[1:])/2
     plt.xlim((0, 180))
     plt.ylim((0, 0.06))
@@ -184,18 +186,20 @@ def _compute_tail_angles(universe, tam_length, cutoff):
     normalized_counts = np.divide(counts,
         abs(np.sin((np.pi / 180)*angle_bins_center)))
     fig, ax = plt.subplots()
-    arr = ax.hist(angle_bins_center, weights=normalized_counts, bins=180, range=(0.0, 180.0),
+    arr = ax.hist(angle_bins_center, weights=normalized_counts, bins=90, range=(0.0, 180.0),
         density=False)
     plt.xlim((0, 180))
     plt.xlabel('Angle (degrees)')
     plt.ylabel('Probability')
     fig.savefig(f'normalized_tail_angles_{cutoff}.pdf')
+    np.savetxt(f'normalized_tail_angles_{cutoff}.txt', np.transpose(np.vstack([angle_bins_center, normalized_counts])), header="bins\tnormalized counts")
 
 def _compute_taa_angles(universe, tam_length, cutoff):
     #taa_groups = [universe.select_atoms('(type seiji_007 and resid {} and bonded type seiji_008) or (type seiji_008 and resid {})'.format(r.resid, r.resid)) for r in universe.residues if r.resname == 'tam']
     taa_groups = [universe.select_atoms('(type seiji_007 and resid {} and bonded type seiji_008) or (type seiji_003 and resid {})'.format(r.resid, r.resid)) for r in universe.residues if r.resname == 'tam']
 
-    taa_angles = np.nan * np.empty(shape=(universe.trajectory.n_frames, len(taa_groups)))
+    #taa_angles = np.nan * np.empty(shape=(universe.trajectory.n_frames-1000, len(taa_groups)))
+    taa_angles = np.nan * np.empty(shape=(4000, len(taa_groups)))
     """
     >>> np.where(np.isnan([4, 4, ]))[0].shape[0]
     0
@@ -203,15 +207,16 @@ def _compute_taa_angles(universe, tam_length, cutoff):
     4
     """
 
-    for n_frame, frame in enumerate(universe.trajectory[::1]):
+    for n_frame, frame in enumerate(universe.trajectory[:4000:1]):
         for n_taa, taa_group in enumerate(taa_groups):
             # For some reason the zero frame exists twice
             if n_frame == 0:
                 continue
             # Consider first layer of ions
             #if ring_group.center_of_mass()[2] > 6.82 + 5.0:
+            # These are coordinates of H atoms
             if tam_length == 12:
-                z_length = 28.37
+                z_length = 29.47
             elif tam_length == 16:
                 z_length = 32.62
             pore1 = taa_group.center_of_mass()[2] > z_length and taa_group.center_of_mass()[2] < (z_length+cutoff)
@@ -239,13 +244,13 @@ def _compute_taa_angles(universe, tam_length, cutoff):
     taa_angles
     taa_angles = taa_angles.reshape((-1))
     taa_angles = taa_angles[np.logical_not(np.isnan(taa_angles))]
-    histo = np.histogram(taa_angles, bins=180, range=(0.0, 180.0), density=True)
+    histo = np.histogram(taa_angles, bins=90, range=(0.0, 180.0), density=True)
     new_bins = get_center(histo[1])
     np.savetxt(f'histo_taa_angles_{cutoff}.txt', np.transpose(np.vstack([new_bins, histo[0]])),
         header='Count\tAngle')
     np.savetxt(f'taa_angles_{cutoff}.txt', np.asarray(taa_angles))
     fig, ax = plt.subplots()
-    counts, angle_bins, bars = ax.hist(taa_angles, bins=180, range=(0.0, 180.0), density=True)
+    counts, angle_bins, bars = ax.hist(taa_angles, bins=90, range=(0.0, 180.0), density=True)
     angle_bins_center = (angle_bins[:-1] + angle_bins[1:])/2
     plt.xlim((0, 180))
     plt.xlabel('Angle (degrees)')
@@ -255,12 +260,13 @@ def _compute_taa_angles(universe, tam_length, cutoff):
     normalized_counts = np.divide(counts,
         abs(np.sin((np.pi / 180)*angle_bins_center)))
     fig, ax = plt.subplots()
-    arr = ax.hist(angle_bins_center, weights=normalized_counts, bins=180, range=(0.0, 180.0),
+    arr = ax.hist(angle_bins_center, weights=normalized_counts, bins=190, range=(0.0, 180.0),
         density=False)
     plt.xlim((0, 180))
     plt.xlabel('Angle (degrees)')
     plt.ylabel('Probability')
     fig.savefig(f'normalized_taa_angles_{cutoff}.pdf')
+    np.savetxt(f'normalized_taa_angles_{cutoff}.txt', np.transpose(np.vstack([angle_bins_center, normalized_counts])), header="bins\tnormalized counts")
 
 def get_center(bins):
     new_bins = list()

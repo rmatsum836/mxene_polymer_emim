@@ -1,0 +1,45 @@
+constraints         = h-bonds
+constraint-algorithm = LINCS
+lincs_iter          = 1
+lincs_order         = 4
+integrator          = md
+nsteps              = 20000000
+dt                  = 0.001
+
+nstxout             = 10000
+nstvout             = 0
+nstenergy           = 1000
+nstlog              = 1000
+
+cutoff-scheme       = Verlet
+ns_type             = grid
+nstlist             = 10
+rcoulomb            = 1.2
+rvdw                = 1.2
+
+coulombtype         = PME
+fourierspacing      = 0.12
+ewald-geometry      = 3d
+
+gen_vel             = no
+
+tcoupl              = v-rescale
+tc-grps             = RES tam_emim_tf2n
+tau_t               = 0.5 0.5
+ref_t               = 303 303
+
+annealing           = single single
+annealing-npoints   = 6 6
+annealing-time      = 0 1000 3000 11000 15000 20000 0 1000 3000 11000 15000 20000
+annealing-temp      = 303 303 700 700  393   393   303 303 700 700 393 393
+
+pcoupl              = no
+
+freezegrps          = RES
+freezedim           = Y Y Y
+
+comm-mode           = None
+
+pbc                 = xyz
+;DispCorr            = EnerPres
+periodic-molecules  = yes

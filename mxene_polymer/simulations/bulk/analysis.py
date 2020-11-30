@@ -17,18 +17,19 @@ def number_density(path):
     None 
     """
     fig, ax = plt.subplots()
-    trj = md.load(f'{path}/sample_res.trr', top=f'{path}/sample_2.gro')
+    # Go up to 4 ns
+    trj = md.load(f'{path}/sample_com_res.trr', top=f'{path}/sample.gro')[:4000]
     mxene_trj = trj.atom_slice(trj.topology.select('resname RES'))
-    #area = np.max(mxene_trj.xyz[:,:,0]) * np.max(mxene_trj.xyz[:,:,1]-3)
-    area = np.max(mxene_trj.xyz[:,:,0]) * np.max(mxene_trj.xyz[:,:,1])
+    area = trj.unitcell_lengths[0][0] * (np.max(mxene_trj.xyz[:,:,1])-2)
     dim = 2
-    box_range = [0, np.max(trj.xyz[:,:,2])]
+    box_range = [0, trj.unitcell_lengths[0][2]]
     volume = area * (box_range[1] - box_range[0])
 
-    maxs = np.array([np.max(mxene_trj.xyz[:,:,0]), np.max(mxene_trj.xyz[:,:,1]), np.max(trj.xyz[:,:,2])])
-    mins = np.array([np.min(mxene_trj.xyz[:,:,0]), np.min(mxene_trj.xyz[:,:,1]), np.min(trj.xyz[:,:,2])])
+    maxs = np.array([np.max(mxene_trj.xyz[:,:,0]), np.max(mxene_trj.xyz[:,:,1])-1, np.max(trj.xyz[:,:,2])])
+    mins = np.array([np.min(mxene_trj.xyz[:,:,0]), np.min(mxene_trj.xyz[:,:,1])+1, np.min(trj.xyz[:,:,2])])
     #mins = np.array([0, 0, 0])
     dims = maxs - mins
+    n_bins = np.arange(box_range[0], box_range[1], 0.0203)
 
     rho, bins, res_list = calc_number_density(
                     trj=trj,
@@ -36,18 +37,18 @@ def number_density(path):
                     dim=2,
                     shift=False,
                     box_range=box_range,
-                    n_bins=200,
+                    n_bins=n_bins,
                     maxs=maxs,
                     mins=mins)
     for i in range(1, 4):
         plt.plot(bins, rho[i], label=f"{res_list[i]}")
-    np.savetxt(f'{path}/number_density.txt', np.transpose(np.vstack([bins, rho[1], rho[2], rho[3]])),
+    np.savetxt(f'{path}/number_density_com.txt', np.transpose(np.vstack([bins, rho[1], rho[2], rho[3]])),
                header=f"bins\t{res_list[1]}\t{res_list[2]}\t{res_list[3]}\t{dims}")
     plt.xlabel('z-position (nm)')
     plt.ylabel('number density (nm^-3)')
     plt.legend()
     plt.xlim((box_range[0], box_range[1]))
-    plt.savefig(f'{path}/numden.pdf')
+    plt.savefig(f'{path}/numden_com.pdf')
 
 
 def atom_number_density(path):
@@ -63,14 +64,17 @@ def atom_number_density(path):
     None 
     """
     fig, ax = plt.subplots()
-    trj = md.load(f'{path}/sample_res.trr', top=f'{path}/ti3c2.gro')
+    #trj = md.load(f'{path}/sample_2_res.trr', top=f'{path}/ti3c2.gro')[:4000]
+    trj = md.load(f'{path}/sample_res.trr', top=f'{path}/ti3c2.gro')[:4000]
     mxene_trj = trj.atom_slice(trj.topology.select('resname RES'))
-    area = np.max(mxene_trj.xyz[:,:,0]) * np.max(mxene_trj.xyz[:,:,1]-3)
+    area = trj.unitcell_lengths[0][0] * (np.max(mxene_trj.xyz[:,:,1])-2)
     dim = 2
-    box_range = [0, np.max(trj.xyz[:,:,2])]
+    box_range = [0, trj.unitcell_lengths[0][2]]
     volume = area * (box_range[1] - box_range[0])
+    n_bins = np.arange(box_range[0], box_range[1], 0.0203)
 
-    maxs = [np.max(mxene_trj.xyz[:,:,0]), np.max(mxene_trj.xyz[:,:,1])-1.5, np.max(trj.xyz[:,:,2])]
+    maxs = np.array([np.max(mxene_trj.xyz[:,:,0]), np.max(mxene_trj.xyz[:,:,1])-1, np.max(trj.xyz[:,:,2])])
+    mins = np.array([np.min(mxene_trj.xyz[:,:,0]), np.min(mxene_trj.xyz[:,:,1])+1, np.min(trj.xyz[:,:,2])])
 
     selections = {'tam_N': 'resname tam and name N',
             'endC': 'resname tam and name CE',
@@ -85,8 +89,9 @@ def atom_number_density(path):
                     n_bins=200,
                     atom_selection=selections,
                     maxs=maxs,
+                    mins=mins,
                     shift=False,
-                    mins=[0,1.5,0])
+                    )
 
     for i in range(1, 4):
         rho_1 = sum(rho[i][:100]) / volume
@@ -159,9 +164,9 @@ def calc_pore_density():
         print(np.mean(mean))
 
 if __name__ == '__main__':
-    #atom_number_density('12/kpl_seiji/1415_no_shift')
-    #atom_number_density('16/kpl_seiji/1410_no_shift')
-    number_density('12/kpl_seiji/1415_no_shift')
-    number_density('16/kpl_seiji/1410_no_shift')
+    #atom_number_density('12/kpl_seiji/568_bulk_ions/longer')
+    #atom_number_density('16/kpl_seiji/1410_updated_params/longer')
+    #number_density('12/kpl_seiji/568_bulk_ions/longer')
+    number_density('16/kpl_seiji/1410_updated_params/longer')
     #calc_rg('12/kpl_lopes/1515_density')
     #calc_rg('16/1514_density')

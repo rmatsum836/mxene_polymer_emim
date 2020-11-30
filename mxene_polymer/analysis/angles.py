@@ -98,16 +98,16 @@ def _compute_ring_angles(universe, tam_length, cutoff):
     ring_angles = ring_angles[np.logical_not(np.isnan(ring_angles))]
     histo = np.histogram(ring_angles, bins=90, range=(0.0, 180.0), density=True)
     new_bins = get_center(histo[1])
-    np.savetxt(f'histo_ring_angles_{cutoff}.txt', np.transpose(np.vstack([new_bins, histo[0]])),
+    np.savetxt(f'histo_ring_angles_{cutoff}_comm.txt', np.transpose(np.vstack([new_bins, histo[0]])),
         header='Count\tAngle')
-    np.savetxt(f'ring_angles_{cutoff}.txt', np.asarray(ring_angles))
+    np.savetxt(f'ring_angles_{cutoff}_comm.txt', np.asarray(ring_angles))
     fig, ax = plt.subplots()
     counts, angle_bins, bars = ax.hist(ring_angles, bins=90, range=(0.0, 180.0), density=True)
     angle_bins_center = (angle_bins[:-1] + angle_bins[1:])/2
     plt.xlim((0, 180))
     plt.xlabel('Angle (degrees)')
     plt.ylabel('Probability')
-    fig.savefig(f'unnormalized_ring_angles_{cutoff}.pdf')
+    fig.savefig(f'unnormalized_ring_angles_{cutoff}_comm.pdf')
    
     normalized_counts = np.divide(counts,
         abs(np.sin((np.pi / 180)*angle_bins_center)))
@@ -117,8 +117,8 @@ def _compute_ring_angles(universe, tam_length, cutoff):
     plt.xlim((0, 180))
     plt.xlabel('Angle (degrees)')
     plt.ylabel('Probability')
-    fig.savefig(f'normalized_ring_angles_{cutoff}.pdf')
-    np.savetxt(f'normalized_ring_angles_{cutoff}.txt', np.transpose(np.vstack([angle_bins_center, normalized_counts])), header="bins\tnormalized counts")
+    fig.savefig(f'normalized_ring_angles_{cutoff}_comm.pdf')
+    np.savetxt(f'normalized_ring_angles_{cutoff}_comm.txt', np.transpose(np.vstack([angle_bins_center, normalized_counts])), header="bins\tnormalized counts")
 
 def _compute_tail_angles(universe, tam_length, cutoff):
     #tail_groups = [universe.select_atoms('type kpl_014 kpl_016 and resid {} and not bonded type kpl_016'.format(r.resid)) for r in universe.residues if r.resname == 'emim']

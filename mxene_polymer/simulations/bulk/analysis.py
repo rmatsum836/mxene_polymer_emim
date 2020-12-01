@@ -42,13 +42,13 @@ def number_density(path):
                     mins=mins)
     for i in range(1, 4):
         plt.plot(bins, rho[i], label=f"{res_list[i]}")
-    np.savetxt(f'{path}/number_density_com.txt', np.transpose(np.vstack([bins, rho[1], rho[2], rho[3]])),
+    np.savetxt(f'{path}/number_density.txt', np.transpose(np.vstack([bins, rho[1], rho[2], rho[3]])),
                header=f"bins\t{res_list[1]}\t{res_list[2]}\t{res_list[3]}\t{dims}")
     plt.xlabel('z-position (nm)')
     plt.ylabel('number density (nm^-3)')
     plt.legend()
     plt.xlim((box_range[0], box_range[1]))
-    plt.savefig(f'{path}/numden_com.pdf')
+    plt.savefig(f'{path}/numden.pdf')
 
 
 def atom_number_density(path):

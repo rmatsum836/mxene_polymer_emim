@@ -18,8 +18,9 @@ def number_density(path):
     """
     fig, ax = plt.subplots()
     # Go up to 4 ns
-    trj = md.load(f'{path}/sample_com_res.trr', top=f'{path}/sample.gro')[:4000]
+    trj = md.load(f'{path}/sample_res.trr', top=f'{path}/sample.gro')[:4000]
     mxene_trj = trj.atom_slice(trj.topology.select('resname RES'))
+    # Only consider center of MXene pore 1 nm away from each entrance
     area = trj.unitcell_lengths[0][0] * (np.max(mxene_trj.xyz[:,:,1])-2)
     dim = 2
     box_range = [0, trj.unitcell_lengths[0][2]]
@@ -27,7 +28,6 @@ def number_density(path):
 
     maxs = np.array([np.max(mxene_trj.xyz[:,:,0]), np.max(mxene_trj.xyz[:,:,1])-1, np.max(trj.xyz[:,:,2])])
     mins = np.array([np.min(mxene_trj.xyz[:,:,0]), np.min(mxene_trj.xyz[:,:,1])+1, np.min(trj.xyz[:,:,2])])
-    #mins = np.array([0, 0, 0])
     dims = maxs - mins
     n_bins = np.arange(box_range[0], box_range[1], 0.0203)
 
@@ -64,7 +64,6 @@ def atom_number_density(path):
     None 
     """
     fig, ax = plt.subplots()
-    #trj = md.load(f'{path}/sample_2_res.trr', top=f'{path}/ti3c2.gro')[:4000]
     trj = md.load(f'{path}/sample_res.trr', top=f'{path}/ti3c2.gro')[:4000]
     mxene_trj = trj.atom_slice(trj.topology.select('resname RES'))
     area = trj.unitcell_lengths[0][0] * (np.max(mxene_trj.xyz[:,:,1])-2)
@@ -100,7 +99,6 @@ def atom_number_density(path):
     plt.xlabel('z-position (nm)')
     plt.ylabel('number density (nm^-3)')
     plt.legend()
-    #plt.xlim((0.8, box_range[1]))
     plt.savefig(f'{path}/taa_atom_numden.pdf')
     np.savetxt(f'{path}/taa_atom_numden.txt',
                np.transpose(np.vstack([bins, rho])),
@@ -108,65 +106,195 @@ def atom_number_density(path):
     )
 
 
-def calc_rg(path):
-    trj = md.load(f'{path}/sample.trr', top=f'{path}/anneal.gro')
-    tam = trj.atom_slice(trj.topology.select('resname tam'))
-    rg_list = list()
-    for i in range(40):
-        single = tam.atom_slice(tam.topology.select(f'resid {i}'))
-        rg = md.compute_rg(single)
-        rg_list.append(rg)
-    print(np.mean(rg_list))
-    print(np.std(rg_list))
+def calc_pore_density_12(path):
+    """Calculate density of EMIM-TFSI in pore for TAM-12
 
-    return rg
+    Parameters
+    ----------
+    path: str
+        Path to directory to analyze
 
-
-def calc_bulk_density():
-    """Calculate density of ions in the bulk region """
-    trj = md.load('sample.trr', top='em.gro')
-   
-    mean = list() 
-    # Loop through frames in the trajectory
-    for i in range(1800, 2000):
-        frame = trj[i]
-        print(i)
-        indices = np.intersect1d(np.where(frame.xyz[-1, :, 1] > 8),
-                                 np.where(frame.xyz[-1, :, 1] < 12)
-                  )
-        
-        sliced = frame.atom_slice(indices)
-        sliced.unitcell_lengths[:,1] = 4
-        density = md.density(sliced)
-        mean.append(density)
-        #print(np.mean(density))
-    print(np.mean(mean))
-
-
-def calc_pore_density():
-    """Calculate density of ion in the pore """
-    trj = md.load('sample_2.trr', top='nvt.gro')
+    Returns
+    -------
+    None 
+    """
+    fig, ax = plt.subplots()
+    trj = md.load(f'{path}/com.trr', top=f'{path}/com.gro')
     for resname in ['emim', 'tf2n']:
         mean = list()
         il = trj.atom_slice(trj.topology.select(f'resname {resname}'))
-        for i in range(4800, 5000):
+        for i in range(0, 4000):
             frame = il[i]
         
-            indices = np.intersect1d(np.where(frame.xyz[-1, :, 1] > 2),
-                                     np.where(frame.xyz[-1, :, 1] < 5)
-                      )
-            
-            sliced = il.atom_slice(indices)
-            sliced.unitcell_lengths[:,1] = 3
-            density = md.density(sliced)
-            mean.append(density)
+            pore1 = np.intersect1d(
+                        np.intersect1d(np.where(frame.xyz[-1, :, 1] > 1),
+                                     np.where(frame.xyz[-1, :, 1] < (5.467-1))
+                        ),
+                        np.intersect1d(np.where(frame.xyz[-1, :, 2] > 0.937),
+                                     np.where(frame.xyz[-1, :, 2] < 2.051)
+                        ),
+            )
+            pore2 = np.intersect1d(
+                        np.intersect1d(np.where(frame.xyz[-1, :, 1] > 1),
+                                     np.where(frame.xyz[-1, :, 1] < (5.467-1))
+                        ),
+                        np.intersect1d(np.where(frame.xyz[-1, :, 2] > 2.947),
+                                     np.where(frame.xyz[-1, :, 2] < 4.06017)
+                        ),
+            )
 
+            pore_avg = list()
+            for pore in (pore1, pore2):
+                sliced = frame.atom_slice(pore)
+                sliced.unitcell_lengths[:,1] = (5.467-1) - 1
+                sliced.unitcell_lengths[:,2] = 1.113
+                masses = list()
+                for i in sliced.topology.atoms:
+                    if i.name == 'emim':
+                        masses.append(111)
+                    if i.name == 'tf2n':
+                        masses.append(280)
+
+                density = md.density(sliced, masses=masses)
+                pore_avg.append(density)
+
+            avg_density = np.mean(pore_avg)
+            mean.append(avg_density)
+
+        if resname == 'emim':
+            label = 'EMI'
+        elif resname == 'tf2n':
+            label = 'TFSI'
+        plt.plot(range(0,4000), mean, label=label)
         print(np.mean(mean))
+    plt.xlabel("MD Frame")
+    plt.ylabel("density (kg/m^3)")
+    plt.legend()
+    plt.savefig(f'{path}/sample_densities.pdf', dpi=400)
+    plt.savefig(f'{path}/sample_densities.png', dpi=400)
+
+
+def calc_pore_density_16(path):
+    """Calculate density of EMIM-TFSI in pore for TAM-16
+
+    Parameters
+    ----------
+    path: str
+        Path to directory to analyze
+
+    Returns
+    -------
+    None 
+    """
+    fig, ax = plt.subplots()
+    trj = md.load(f'{path}/com.trr', top=f'{path}/com.gro')
+    for resname in ['emim', 'tf2n']:
+        mean = list()
+        il = trj.atom_slice(trj.topology.select(f'resname {resname}'))
+        for i in range(0, 4000):
+            frame = il[i]
+        
+            pore1 = np.intersect1d(
+                        np.intersect1d(np.where(frame.xyz[-1, :, 1] > 1),
+                                     np.where(frame.xyz[-1, :, 1] < (5.467-1))
+                        ),
+                        np.intersect1d(np.where(frame.xyz[-1, :, 2] > 0.937),
+                                     np.where(frame.xyz[-1, :, 2] < 2.366)
+                        ),
+            )
+            pore2 = np.intersect1d(
+                        np.intersect1d(np.where(frame.xyz[-1, :, 1] > 1),
+                                     np.where(frame.xyz[-1, :, 1] < (5.467-1))
+                        ),
+                        np.intersect1d(np.where(frame.xyz[-1, :, 2] > 3.262),
+                                     np.where(frame.xyz[-1, :, 2] < 4.69017)
+                        ),
+            )
+
+            pore_avg = list()
+            for pore in (pore1, pore2):
+                sliced = frame.atom_slice(pore)
+                sliced.unitcell_lengths[:,1] = (5.467-1) - 1
+                sliced.unitcell_lengths[:,2] = 1.428
+                masses = list()
+                for i in sliced.topology.atoms:
+                    if i.name == 'emim':
+                        masses.append(111)
+                    if i.name == 'tf2n':
+                        masses.append(280)
+
+                density = md.density(sliced, masses=masses)
+                pore_avg.append(density)
+
+            avg_density = np.mean(pore_avg)
+            mean.append(avg_density)
+
+        if resname == 'emim':
+            label = 'EMI'
+        elif resname == 'tf2n':
+            label = 'TFSI'
+        plt.plot(range(0,4000), mean, label=label)
+        print(np.mean(mean))
+    plt.xlabel("MD Frame")
+    plt.ylabel("density (kg/m^3)")
+    plt.legend()
+    plt.savefig(f'{path}/sample_densities.pdf', dpi=400)
+    plt.savefig(f'{path}/sample_densities.png', dpi=400)
+
+
+def calc_bulk_com_density(path):
+    """Calculate density of EMIM-TFSI in bulk
+
+    Parameters
+    ----------
+    path: str
+        Path to directory to analyze
+
+    Returns
+    -------
+    None 
+    """
+    fig, ax = plt.subplots()
+    trj = md.load(f'{path}/com.trr', top=f'{path}/com.gro')
+    ions = trj.atom_slice(trj.topology.select("resname emim tf2n"))
+   
+    mean = list() 
+    # Loop through frames in the trajectory
+    for i in range(0, 4000):
+        frame = ions[i]
+        indices = np.intersect1d(np.where(frame.xyz[-1, :, 1] >= 8.5),
+                                 np.where(frame.xyz[-1, :, 1] <= 11.5)
+                  )
+        
+        sliced = frame.atom_slice(indices)
+        sliced.unitcell_lengths[:,1] = 3
+        masses = list()
+        for i in sliced.topology.atoms:
+            if i.name == 'emim':
+                masses.append(111)
+            if i.name == 'tf2n':
+                masses.append(280)
+
+        masses = np.array(masses)
+        density = md.density(sliced, masses = masses)
+        mean.append(density)
+
+    plt.plot(range(0, 4000), mean)
+    plt.xlabel("MD Frame")
+    plt.ylabel("density (kg/m^3)")
+    plt.savefig(f"{path}/bulk_density.pdf", dpi=400) 
+    plt.savefig(f"{path}/bulk_density.png", dpi=400) 
+
+    print(np.mean(mean))
+
+
 
 if __name__ == '__main__':
     #atom_number_density('12/kpl_seiji/568_bulk_ions/longer')
     #atom_number_density('16/kpl_seiji/1410_updated_params/longer')
     #number_density('12/kpl_seiji/568_bulk_ions/longer')
-    number_density('16/kpl_seiji/1410_updated_params/longer')
-    #calc_rg('12/kpl_lopes/1515_density')
-    #calc_rg('16/1514_density')
+    #number_density('16/kpl_seiji/1410_updated_params/longer')
+    calc_pore_density_12('12/kpl_seiji/568_bulk_ions/longer')
+    calc_pore_density_16('16/kpl_seiji/1410_updated_params/longer')
+    calc_bulk_com_density('12/kpl_seiji/568_bulk_ions/longer')
+    calc_bulk_com_density('16/kpl_seiji/1410_updated_params/longer')

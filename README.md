@@ -13,7 +13,8 @@ tetraalkylammonium polymers and EMIM cations.  The mBuild recipe to build the MX
 
 ## Workflow for simulations
 All simulations were run with GROMACS 2020.  To begin running the simulations, the index files need to first be created by running:
-``` gmx make_ndx -f ti3c2.gro -o index.ndx
+``` 
+gmx make_ndx -f ti3c2.gro -o index.ndx
 ```
 
 From there, create a group for the ions by typing `2 | 3 | 4` and `q`.

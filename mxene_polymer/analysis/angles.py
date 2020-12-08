@@ -64,7 +64,7 @@ def _compute_ring_angles(universe, tam_length, cutoff):
             # For some reason the zero frame exists twice
             if n_frame == 0:
                 continue
-            # Consider first layer of ions
+            # Consider first layer of ions, z_length corresponds to minimum of ti3c2 sheet for top pore
             if tam_length == 12:
                 z_length = 29.47
             elif tam_length == 16:
@@ -73,7 +73,7 @@ def _compute_ring_angles(universe, tam_length, cutoff):
             pore2 = ring_group.center_of_mass()[2] > 9.37 or ring_group.center_of_mass()[2] < 9.37 + cutoff
             if not pore1 or not pore2:
                 continue
-            # Only consider ions in the pore, max is hardcoded to edge of MXene sheet
+            # Only consider ions in the pore, max is hardcoded to edge of MXene sheet (1 nm)
             if ring_group.center_of_mass()[1] < 10 or ring_group.center_of_mass()[1] > (54.67-10):
                 continue
             # Check which side of pore ion is on to determine normal vector of surface
@@ -139,7 +139,6 @@ def _compute_tail_angles(universe, tam_length, cutoff):
             if n_frame == 0:
                 continue
             # Consider first layer of ions
-            #if ring_group.center_of_mass()[2] > 6.82 + 5.0:
             if tam_length == 12:
                 z_length = 29.47
             elif tam_length == 16:
@@ -153,7 +152,6 @@ def _compute_tail_angles(universe, tam_length, cutoff):
                 continue
             # Check which side of pore ion is on to determine normal vector of surface
             if pore1:
-                #if tail_group.positions[0][2] < (z_length + (z_length+cutoff)) / 2:
                 if tail_group.center_of_mass()[2] < (z_length + (z_length+cutoff)) / 2:
                     side_of_pore = 1
                 elif tail_group.center_of_mass()[2] > (z_length + (z_length+cutoff)) / 2:

@@ -37,9 +37,11 @@ def compute_angles(top_file, trj_file, tam_length, angle_type='ring', cutoff=7.0
     box = universe.select_atoms('all').bbox()
     if cutoff == None:
         if tam_length == 12:
-            cutoff = 11.13
+            #cutoff = 11.13
+            cutoff = 13.11
         elif tam_length == 16:
-            cutoff = 14.0
+            #cutoff = 14.0
+            cutoff = 16.26
     if angle_type == 'ring':
         _compute_ring_angles(universe, tam_length, cutoff)
     if angle_type == 'tail':
@@ -52,23 +54,26 @@ def _compute_ring_angles(universe, tam_length, cutoff):
     ring_groups = [universe.select_atoms('type kpl_012 kpl_011 and resid {}'.format(r.resid)) for r in universe.residues if r.resname == 'emim']
 
     #ring_angles = np.nan * np.empty(shape=(universe.trajectory.n_frames-1000, len(ring_groups)))
-    ring_angles = np.nan * np.empty(shape=(4000, len(ring_groups)))
+    ring_angles = np.nan * np.empty(shape=(5000, len(ring_groups)))
     """
     >>> np.where(np.isnan([4, 4, ]))[0].shape[0]
     0
     >>> np.where(np.isnan(x))[0].shape[0]
     4
     """
-    for n_frame, frame in enumerate(universe.trajectory[:4000:1]):
+    for n_frame, frame in enumerate(universe.trajectory[:5000:1]):
         for n_ring, ring_group in enumerate(ring_groups):
             # For some reason the zero frame exists twice
             if n_frame == 0:
                 continue
             # Consider first layer of ions, z_length corresponds to minimum of ti3c2 sheet for top pore
             if tam_length == 12:
-                z_length = 29.47
+                #z_length = 29.47
+                z_length = 31.44
             elif tam_length == 16:
-                z_length = 32.62
+                # For original definition of d-spacing
+                #z_length = 32.62
+                z_length = 34.599
             pore1 = ring_group.center_of_mass()[2] > z_length or ring_group.center_of_mass()[2] < z_length + cutoff
             pore2 = ring_group.center_of_mass()[2] > 9.37 or ring_group.center_of_mass()[2] < 9.37 + cutoff
             if not pore1 or not pore2:
@@ -125,7 +130,7 @@ def _compute_tail_angles(universe, tam_length, cutoff):
     tail_groups = [universe.select_atoms('(type kpl_010 and resid {} and around 3 type kpl_016) or (type kpl_016 and resid {})'.format(r.resid, r.resid)) for r in universe.residues if r.resname == 'emim']
 
     #tail_angles = np.nan * np.empty(shape=(universe.trajectory.n_frames-1000, len(tail_groups)))
-    tail_angles = np.nan * np.empty(shape=(4000, len(tail_groups)))
+    tail_angles = np.nan * np.empty(shape=(5000, len(tail_groups)))
     """
     >>> np.where(np.isnan([4, 4, ]))[0].shape[0]
     0
@@ -133,16 +138,18 @@ def _compute_tail_angles(universe, tam_length, cutoff):
     4
     """
 
-    for n_frame, frame in enumerate(universe.trajectory[:4000:1]):
+    for n_frame, frame in enumerate(universe.trajectory[:5000:1]):
         for n_tail, tail_group in enumerate(tail_groups):
             # For some reason the zero frame exists twice
             if n_frame == 0:
                 continue
             # Consider first layer of ions
             if tam_length == 12:
-                z_length = 29.47
+                #z_length = 29.47
+                z_length = 31.44
             elif tam_length == 16:
-                z_length = 32.62
+                #z_length = 32.62
+                z_length = 34.599
             pore1 = tail_group.center_of_mass()[2] > z_length and tail_group.center_of_mass()[2] < (z_length+cutoff)
             pore2 = tail_group.center_of_mass()[2] > 9.37 or tail_group.center_of_mass()[2] < 9.37 + cutoff
             if not pore1 or not pore2:
@@ -197,7 +204,7 @@ def _compute_taa_angles(universe, tam_length, cutoff):
     taa_groups = [universe.select_atoms('(type seiji_007 and resid {} and bonded type seiji_008) or (type seiji_003 and resid {})'.format(r.resid, r.resid)) for r in universe.residues if r.resname == 'tam']
 
     #taa_angles = np.nan * np.empty(shape=(universe.trajectory.n_frames-1000, len(taa_groups)))
-    taa_angles = np.nan * np.empty(shape=(4000, len(taa_groups)))
+    taa_angles = np.nan * np.empty(shape=(5000, len(taa_groups)))
     """
     >>> np.where(np.isnan([4, 4, ]))[0].shape[0]
     0
@@ -205,7 +212,7 @@ def _compute_taa_angles(universe, tam_length, cutoff):
     4
     """
 
-    for n_frame, frame in enumerate(universe.trajectory[:4000:1]):
+    for n_frame, frame in enumerate(universe.trajectory[:5000:1]):
         for n_taa, taa_group in enumerate(taa_groups):
             # For some reason the zero frame exists twice
             if n_frame == 0:
@@ -214,9 +221,11 @@ def _compute_taa_angles(universe, tam_length, cutoff):
             #if ring_group.center_of_mass()[2] > 6.82 + 5.0:
             # These are coordinates of H atoms
             if tam_length == 12:
-                z_length = 29.47
+                #z_length = 29.47
+                z_length = 31.44
             elif tam_length == 16:
-                z_length = 32.62
+                #z_length = 32.62
+                z_length = 34.599
             pore1 = taa_group.center_of_mass()[2] > z_length and taa_group.center_of_mass()[2] < (z_length+cutoff)
             pore2 = taa_group.center_of_mass()[2] > 9.37 or taa_group.center_of_mass()[2] < 9.37 + cutoff
             if not pore1 or not pore2:

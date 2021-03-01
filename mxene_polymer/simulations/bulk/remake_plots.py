@@ -32,10 +32,14 @@ def color_dict(label):
 def plot_all():
     plt.style.use('seaborn-muted')
     fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(15,12))
-    cutoff_12 = 11.13
-    path_12 = "12/kpl_seiji/568_bulk_ions/longer"
-    cutoff_16 = 14.0
-    path_16 = "16/kpl_seiji/1410_updated_params/longer"
+    #cutoff_12 = 11.13
+    #path_12 = "12/kpl_seiji/568_bulk_ions/longer"
+    cutoff_12 = 13.11
+    path_12 = "12/kpl_seiji/1.31nm/625_updated_4"
+    #cutoff_16 = 14.0
+    #path_16 = "16/kpl_seiji/1410_updated_params/longer"
+    cutoff_16 = 16.26
+    path_16 = "16/kpl_seiji/1.626nm/737_updated"
     paths = (path_12, path_16)
     cutoffs = (cutoff_12, cutoff_16)
     for idx, (cutoff, path) in enumerate(zip(cutoffs, paths)):
@@ -99,9 +103,9 @@ def plot_all():
         ax.set_xlabel('z, nm', fontsize=20)
         ax.set_ylabel(r'$ \mathrm{\rho(z)}, \mathrm{nm}^{-3}$', fontsize=20)
         if idx == 0:
-            ax.set_xlim((1, 4.0))
+            ax.set_xlim((1, 4.5))
         else:
-            ax.set_xlim((1, 4.65))
+            ax.set_xlim((1, 5.2))
         ax.set_ylim((0, 17))
         ax.tick_params(labelsize=18)
         ax.xaxis.set_major_locator(MultipleLocator(1))
@@ -138,9 +142,9 @@ def plot_all():
         ax.set_xlabel('z, nm', fontsize=20)
         ax.set_ylabel(r'$ \mathrm{\rho(z)}, \mathrm{nm}^{-3}$', fontsize=20)
         if idx == 0:
-            ax.set_xlim((1, 4.0))
+            ax.set_xlim((1, 4.5))
         else:
-            ax.set_xlim((1, 4.65))
+            ax.set_xlim((1, 5.2))
         ax.set_ylim((0, 4))
         ax.tick_params(labelsize=18)
         ax.xaxis.set_major_locator(MultipleLocator(1))
@@ -164,8 +168,8 @@ def plot_all():
                 ncol=3)
     fig.tight_layout()
     #fig.savefig(f'figures/taa_number_density.pdf', bbox_inches='tight')
-    fig.savefig(f'figures/overall.pdf', bbox_inches='tight', dpi=300)
-    fig.savefig(f'figures/overall.png', bbox_inches='tight', dpi=300)
+    fig.savefig(f'figures/overall_with_space.pdf', bbox_inches='tight', dpi=300)
+    fig.savefig(f'figures/overall_with_space.png', bbox_inches='tight', dpi=300)
 
 
 #plot_angles()

@@ -12,7 +12,7 @@ tetraalkylammonium polymers and EMIM cations.  The mBuild recipe to build the MX
 - MDAnalysis
 
 ## Workflow for simulations
-All simulations were run with GROMACS 2020.  To begin running the simulations, the index files need to first be created by running:
+All simulations were run with GROMACS 2020.  The final systems are contained within the `bulk` subdirectory in the `simulations` directory.  The final system containing the 12-carbon tetraalkylammonium is named `625_updated_4` and the final system containing the 16-carbon tetraalkylammonium is named `737_updated`.  To begin running the simulations, the index files need to first be created by running:
 ``` 
 gmx make_ndx -f ti3c2.gro -o index.ndx
 ```
